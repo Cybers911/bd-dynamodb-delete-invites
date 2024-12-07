@@ -89,9 +89,9 @@ your next task in this sprint, and this one's yours. We'll tackle this in two st
 Let's get started!
 
 1. Make sure `DeleteMemberActivityTest` fails now
-2. Implement `MemberDao`'s `deletePermanently()` so that the test passes
-3. Use the `MemberDao` method in the `handleRequest()` method in the `DeleteMemberActivity` class
-4. Make sure `DeleteMemberActivityTest` passes now
+2. **Implement** `MemberDao`'s `deletePermanently()` so that the test passes
+3. **Use the** `MemberDao` method in the `handleRequest()` method in the `DeleteMemberActivity` class
+4. **Make sure** `DeleteMemberActivityTest` passes now
 5. Run the `Phase1Test` make sure it passes!
 
 GOAL: Your `DeleteMemberActivity` is working!

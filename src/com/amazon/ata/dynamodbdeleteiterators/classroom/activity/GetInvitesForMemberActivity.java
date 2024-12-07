@@ -1,9 +1,15 @@
 package com.amazon.ata.dynamodbdeleteiterators.classroom.activity;
 
+import com.amazon.ata.dynamodbdeleteiterators.classroom.dao.EventDao;
 import com.amazon.ata.dynamodbdeleteiterators.classroom.dao.InviteDao;
+import com.amazon.ata.dynamodbdeleteiterators.classroom.dao.models.CanceledInvite;
+import com.amazon.ata.dynamodbdeleteiterators.classroom.dao.models.Event;
 import com.amazon.ata.dynamodbdeleteiterators.classroom.dao.models.Invite;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.ListIterator;
+import java.util.Map;
 import javax.inject.Inject;
 
 /**
@@ -11,19 +17,22 @@ import javax.inject.Inject;
  */
 public class GetInvitesForMemberActivity {
     private InviteDao inviteDao;
+    private EventDao eventDao; // Assuming EventDao exists and is injected here.
 
     /**
      * Constructs an Activity with the given DAO.
+     *
      * @param inviteDao The InviteDao to use to fetch invites
      */
     @Inject
-    public GetInvitesForMemberActivity(InviteDao inviteDao) {
+    public GetInvitesForMemberActivity(InviteDao inviteDao, EventDao eventDao) {
         this.inviteDao = inviteDao;
+        this.eventDao = eventDao; // Assuming EventDao exists and is injected here.
     }
 
     /**
      * Fetches all invites sent to a given member.
-     *
+     * <p>
      * NOTE: A little deviation from usual.
      * Here we're using values directly in our arguments and return value,
      * whereas in a typical Coral service we'd have Request/Result objects
@@ -35,6 +44,29 @@ public class GetInvitesForMemberActivity {
      * @return List of Invites sent to the member (if any found)
      */
     public List<Invite> handleRequest(final String memberId) {
-        return inviteDao.getInvitesSentToMember(memberId);
+        List<Invite> invites = inviteDao.getInvitesSentToMember(memberId);
+
+        Map<String, Event> eventMap = new HashMap<>(); // Assuming getAllEvents() returns a Map<String, Event>
+        for (Invite invite : invites) {
+            eventMap.put(invite.getEventId(), eventDao.getEvent(invite.getEventId()));
+
+        }
+
+        ListIterator<Invite> inviteListIterator = invites.listIterator();
+        while (inviteListIterator.hasNext()) {
+            Invite invite = inviteListIterator.next();
+            Event event = eventMap.get(invite.getEventId());
+
+            if (event.isCanceled()) {
+                inviteDao.cancelInvite(event.getId(), invite.getMemberId());
+                inviteListIterator.remove(); // Remove canceled invite from the list.
+
+                inviteListIterator.add(new CanceledInvite(invite)); // Add a CancelInvite marker to the list.           }
+            }
+
+
+        }
+        return invites;
+
     }
 }
